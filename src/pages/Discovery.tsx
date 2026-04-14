@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Search, Table2, Eye, Tag, ShoppingCart, Check, Filter, Database, Users, Star,
+  Search, Tag, ShoppingCart, Check, Database, Users, Layers,
 } from 'lucide-react';
 import { mockProducts } from '../data/mockProducts';
-import { OBJECT_TYPE_LABELS, ObjectType } from '../types/product';
 import { useCart } from '../contexts/CartContext';
 
 const allTeams = [...new Set(mockProducts.map((p) => p.team))].sort();
@@ -14,7 +13,6 @@ export function Discovery() {
   const navigate = useNavigate();
   const { addItem, removeItem, isInCart, count } = useCart();
   const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState<ObjectType | 'all'>('all');
   const [teamFilter, setTeamFilter] = useState<string>('all');
   const [catalogFilter, setCatalogFilter] = useState<string>('all');
 
@@ -25,10 +23,9 @@ export function Discovery() {
       p.description.toLowerCase().includes(search.toLowerCase()) ||
       p.object.toLowerCase().includes(search.toLowerCase()) ||
       p.tags.some((t) => t.toLowerCase().includes(search.toLowerCase()));
-    const matchType = typeFilter === 'all' || p.objectType === typeFilter;
     const matchTeam = teamFilter === 'all' || p.team === teamFilter;
     const matchCatalog = catalogFilter === 'all' || p.catalog === catalogFilter;
-    return matchSearch && matchType && matchTeam && matchCatalog;
+    return matchSearch && matchTeam && matchCatalog;
   });
 
   return (
@@ -56,7 +53,7 @@ export function Discovery() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-3 gap-4 mb-8">
         <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
           <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
             <Database size={18} className="text-blue-600" />
@@ -68,20 +65,11 @@ export function Discovery() {
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
           <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-            <Table2 size={18} className="text-green-600" />
+            <Layers size={18} className="text-green-600" />
           </div>
           <div>
-            <p className="text-xl font-bold text-gray-800">{mockProducts.filter((p) => p.objectType === 'table' && p.status === 'active').length}</p>
-            <p className="text-xs text-gray-500">Tabelas</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
-            <Eye size={18} className="text-purple-600" />
-          </div>
-          <div>
-            <p className="text-xl font-bold text-gray-800">{mockProducts.filter((p) => p.objectType === 'view' && p.status === 'active').length}</p>
-            <p className="text-xs text-gray-500">Views</p>
+            <p className="text-xl font-bold text-gray-800">{allCatalogs.length}</p>
+            <p className="text-xs text-gray-500">Catalogs</p>
           </div>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
@@ -107,15 +95,6 @@ export function Discovery() {
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-          </div>
-
-          <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
-            {(['all', 'table', 'view'] as const).map((t) => (
-              <button key={t} onClick={() => setTypeFilter(t)}
-                className={`px-3 py-1.5 text-xs rounded-md font-medium transition-colors ${typeFilter === t ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-                {t === 'all' ? 'Todos' : t === 'table' ? 'Tabelas' : 'Views'}
-              </button>
-            ))}
           </div>
 
           <select value={catalogFilter} onChange={(e) => setCatalogFilter(e.target.value)}
@@ -144,16 +123,7 @@ export function Discovery() {
               {/* Card header */}
               <div className="p-5 flex-1">
                 <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${p.objectType === 'table' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'}`}>
-                      {p.objectType === 'table' ? <Table2 size={10} /> : <Eye size={10} />}
-                      {OBJECT_TYPE_LABELS[p.objectType]}
-                    </span>
-                    <span className="text-xs text-gray-400">{p.team}</span>
-                  </div>
-                  {p.importedFromDatabricks && (
-                    <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">Databricks</span>
-                  )}
+                  <span className="text-xs text-gray-400">{p.team}</span>
                 </div>
 
                 <h3 className="text-base font-semibold text-gray-900 mb-1 cursor-pointer hover:text-blue-600 transition-colors"

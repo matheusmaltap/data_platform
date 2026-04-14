@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  ChevronLeft, Table2, Eye, Download, Tag, Pencil, Shield,
-  Plus, Trash2, Check, Key, Users, User, Bot,
+  ChevronLeft, Download, Tag, Pencil, Shield,
+  Plus, Trash2, Check, Key, Users, User, Bot, Package,
 } from 'lucide-react';
 import { mockProducts, mockPermissions } from '../data/mockProducts';
 import {
-  OBJECT_TYPE_LABELS, PRODUCT_STATUS_LABELS, ProductStatus, ObjectPermission,
+  PRODUCT_STATUS_LABELS, ProductStatus, ObjectPermission,
   PermissionLevel, PrincipalType, PERMISSION_LABELS, getTypeColor,
 } from '../types/product';
 
@@ -83,10 +83,6 @@ export function ProductDetail() {
             <h1 className="text-2xl font-bold text-gray-900">{product.name}</h1>
             <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[product.status]}`}>
               {PRODUCT_STATUS_LABELS[product.status]}
-            </span>
-            <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${product.objectType === 'table' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'}`}>
-              {product.objectType === 'table' ? <Table2 size={10} /> : <Eye size={10} />}
-              {OBJECT_TYPE_LABELS[product.objectType]}
             </span>
             {product.importedFromDatabricks && (
               <span className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
@@ -194,7 +190,7 @@ export function ProductDetail() {
         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
           {product.columns.length === 0 ? (
             <div className="text-center py-12 text-gray-400">
-              <Table2 size={28} className="mx-auto mb-2 opacity-30" />
+              <Package size={28} className="mx-auto mb-2 opacity-30" />
               <p className="text-sm">Nenhuma coluna cadastrada</p>
             </div>
           ) : (

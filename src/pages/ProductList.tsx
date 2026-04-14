@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Table2, Eye, Tag, CheckCircle, Clock, FileEdit } from 'lucide-react';
+import { Plus, Search, Tag, CheckCircle, Clock, FileEdit, Package } from 'lucide-react';
 import { mockProducts } from '../data/mockProducts';
-import { ProductStatus, ObjectType, OBJECT_TYPE_LABELS, PRODUCT_STATUS_LABELS } from '../types/product';
+import { ProductStatus, PRODUCT_STATUS_LABELS } from '../types/product';
 
 const STATUS_COLORS: Record<ProductStatus, string> = {
   active:     'bg-green-100 text-green-700',
@@ -17,16 +17,15 @@ const STATUS_ICONS: Record<ProductStatus, React.ElementType> = {
 };
 
 const stats = [
-  { label: 'Objetos Ativos',    value: String(mockProducts.filter((p) => p.status === 'active').length),     color: 'text-green-600',  bg: 'bg-green-50' },
-  { label: 'Tabelas',           value: String(mockProducts.filter((p) => p.objectType === 'table').length),  color: 'text-blue-600',   bg: 'bg-blue-50' },
-  { label: 'Views',             value: String(mockProducts.filter((p) => p.objectType === 'view').length),   color: 'text-purple-600', bg: 'bg-purple-50' },
-  { label: 'Em Rascunho',       value: String(mockProducts.filter((p) => p.status === 'draft').length),      color: 'text-yellow-600', bg: 'bg-yellow-50' },
+  { label: 'Produtos Ativos',   value: String(mockProducts.filter((p) => p.status === 'active').length),     color: 'text-green-600',  bg: 'bg-green-50' },
+  { label: 'Total de Produtos', value: String(mockProducts.length),                                          color: 'text-blue-600',   bg: 'bg-blue-50' },
+  { label: 'Em Rascunho',       value: String(mockProducts.filter((p) => p.status === 'draft').length),       color: 'text-yellow-600', bg: 'bg-yellow-50' },
+  { label: 'Depreciados',       value: String(mockProducts.filter((p) => p.status === 'deprecated').length),  color: 'text-red-600',    bg: 'bg-red-50' },
 ];
 
 export function ProductList() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState<ObjectType | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<ProductStatus | 'all'>('all');
 
   const filtered = mockProducts.filter((p) => {
@@ -35,9 +34,8 @@ export function ProductList() {
       p.object.toLowerCase().includes(search.toLowerCase()) ||
       p.team.toLowerCase().includes(search.toLowerCase()) ||
       p.tags.some((t) => t.toLowerCase().includes(search.toLowerCase()));
-    const matchType   = typeFilter   === 'all' || p.objectType === typeFilter;
     const matchStatus = statusFilter === 'all' || p.status     === statusFilter;
-    return matchSearch && matchType && matchStatus;
+    return matchSearch && matchStatus;
   });
 
   return (
@@ -84,19 +82,6 @@ export function ProductList() {
             />
           </div>
 
-          {/* Type tabs */}
-          <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
-            {(['all', 'table', 'view'] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTypeFilter(t)}
-                className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${typeFilter === t ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-              >
-                {t === 'all' ? 'Todos' : t === 'table' ? 'Tabelas' : 'Views'}
-              </button>
-            ))}
-          </div>
-
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as ProductStatus | 'all')}
@@ -108,7 +93,7 @@ export function ProductList() {
             <option value="deprecated">Depreciado</option>
           </select>
 
-          <span className="text-xs text-gray-400 ml-auto">{filtered.length} objeto(s)</span>
+          <span className="text-xs text-gray-400 ml-auto">{filtered.length} produto(s)</span>
         </div>
 
         {/* Table */}
@@ -116,7 +101,6 @@ export function ProductList() {
           <thead>
             <tr className="bg-gray-50 text-left">
               <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Produto</th>
-              <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Tipo</th>
               <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Objeto Databricks</th>
               <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Colunas</th>
               <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Tags</th>
@@ -136,12 +120,6 @@ export function ProductList() {
                   <td className="px-4 py-3">
                     <p className="text-sm font-medium text-gray-900">{p.name}</p>
                     <p className="text-xs text-gray-400 truncate max-w-xs">{p.description}</p>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${p.objectType === 'table' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'}`}>
-                      {p.objectType === 'table' ? <Table2 size={10} /> : <Eye size={10} />}
-                      {OBJECT_TYPE_LABELS[p.objectType]}
-                    </span>
                   </td>
                   <td className="px-4 py-3">
                     <span className="text-xs font-mono text-gray-600">
@@ -185,7 +163,7 @@ export function ProductList() {
 
         {filtered.length === 0 && (
           <div className="text-center py-12 text-gray-400">
-            <Table2 size={32} className="mx-auto mb-2 opacity-30" />
+            <Package size={32} className="mx-auto mb-2 opacity-30" />
             <p className="text-sm">Nenhum produto encontrado</p>
           </div>
         )}

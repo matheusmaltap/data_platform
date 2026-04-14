@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Clock, CheckCircle, XCircle, User, Users, Shield, Table2, Eye,
-  ChevronDown, ChevronUp, MessageSquare, AlertTriangle,
+  Clock, CheckCircle, XCircle, User, Users, Shield,
+  ChevronDown, ChevronUp, MessageSquare,
 } from 'lucide-react';
 import { mockAccessRequests } from '../data/mockAccessRequests';
 import { AccessRequest, RequestStatus, REQUEST_STATUS_LABELS, REQUEST_STATUS_COLORS } from '../types/accessRequest';
@@ -163,9 +163,6 @@ export function AccessRequests() {
                 onClick={() => setExpandedId(isExpanded ? null : req.id)}>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${req.objectType === 'table' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'}`}>
-                      {req.objectType === 'table' ? <Table2 size={10} /> : <Eye size={10} />}
-                    </span>
                     <h3 className="text-sm font-semibold text-gray-900">{req.productName}</h3>
                     <span className="text-xs font-mono text-gray-400">
                       {req.catalog}.{req.schema}.{req.object}

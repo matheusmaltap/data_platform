@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ChevronLeft, ShoppingCart, Trash2, Table2, Eye, Send, Check, MessageSquare,
+  ChevronLeft, ShoppingCart, Trash2, Send, Check, MessageSquare,
 } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { mockProducts } from '../data/mockProducts';
-import { OBJECT_TYPE_LABELS, PermissionLevel, PERMISSION_LABELS } from '../types/product';
+import { PermissionLevel, PERMISSION_LABELS } from '../types/product';
 
 export function Cart() {
   const navigate = useNavigate();
@@ -87,13 +87,7 @@ export function Cart() {
               {cartProducts.map(({ productId, permissionLevel, product }) => (
                 <div key={productId} className="px-5 py-4 flex items-center gap-4 group">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${product!.objectType === 'table' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'}`}>
-                        {product!.objectType === 'table' ? <Table2 size={10} /> : <Eye size={10} />}
-                        {OBJECT_TYPE_LABELS[product!.objectType]}
-                      </span>
-                      <h3 className="text-sm font-semibold text-gray-900">{product!.name}</h3>
-                    </div>
+                    <h3 className="text-sm font-semibold text-gray-900 mb-1">{product!.name}</h3>
                     <p className="text-xs font-mono text-gray-500">
                       <span className="text-blue-600">{product!.catalog}</span>
                       <span className="text-gray-300">.</span>

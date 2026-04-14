@@ -5,8 +5,8 @@ import {
   ChevronDown, ChevronUp, MessageSquare,
 } from 'lucide-react';
 import { mockAccessRequests } from '../data/mockAccessRequests';
-import { AccessRequest, RequestStatus, REQUEST_STATUS_LABELS, REQUEST_STATUS_COLORS } from '../types/accessRequest';
-import { PERMISSION_LABELS } from '../types/product';
+import { AccessRequest, RequestStatus, REQUEST_STATUS_COLORS } from '../types/accessRequest';
+import { useI18n } from '../contexts/I18nContext';
 
 type ViewMode = 'all' | 'pending_owner' | 'pending_data_team' | 'approved' | 'rejected';
 
@@ -17,19 +17,20 @@ const STATUS_ICONS: Record<RequestStatus, React.ElementType> = {
   rejected:          XCircle,
 };
 
-const tabs: { key: ViewMode; label: string }[] = [
-  { key: 'all',              label: 'Todas' },
-  { key: 'pending_owner',    label: 'Aguardando Owner' },
-  { key: 'pending_data_team', label: 'Aguardando Dados' },
-  { key: 'approved',         label: 'Aprovadas' },
-  { key: 'rejected',         label: 'Rejeitadas' },
-];
-
 export function AccessRequests() {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [requests, setRequests] = useState<AccessRequest[]>(mockAccessRequests);
   const [viewMode, setViewMode] = useState<ViewMode>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const tabs: { key: ViewMode; label: string }[] = [
+    { key: 'all',              label: t('requests.all') },
+    { key: 'pending_owner',    label: t('requests.waitingOwner') },
+    { key: 'pending_data_team', label: t('requests.waitingData') },
+    { key: 'approved',         label: t('requests.approved') },
+    { key: 'rejected',         label: t('requests.rejected') },
+  ];
 
   const filtered = viewMode === 'all' ? requests : requests.filter((r) => r.status === viewMode);
 
@@ -61,7 +62,7 @@ export function AccessRequests() {
         ownerApprover: 'Data Engineer',
         ownerDecision: 'rejected' as const,
         ownerDecisionAt: new Date().toISOString().slice(0, 10),
-        ownerNotes: notes || 'Solicitação recusada.',
+        ownerNotes: notes || t('requests.rejected'),
       } : r
     ));
   };
@@ -74,7 +75,7 @@ export function AccessRequests() {
         dataTeamApprover: 'Data Engineer',
         dataTeamDecision: 'approved' as const,
         dataTeamDecisionAt: new Date().toISOString().slice(0, 10),
-        dataTeamNotes: 'Double-check concluído. Permissão concedida.',
+        dataTeamNotes: t('requests.approved'),
       } : r
     ));
   };
@@ -87,7 +88,7 @@ export function AccessRequests() {
         dataTeamApprover: 'Data Engineer',
         dataTeamDecision: 'rejected' as const,
         dataTeamDecisionAt: new Date().toISOString().slice(0, 10),
-        dataTeamNotes: notes || 'Reprovado pelo Time de Dados.',
+        dataTeamNotes: notes || t('requests.rejected'),
       } : r
     ));
   };
@@ -95,9 +96,9 @@ export function AccessRequests() {
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Solicitações de Acesso</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('requests.title')}</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Gerencie as solicitações de acesso aos produtos de dados
+          {t('requests.subtitle')}
         </p>
       </div>
 
@@ -109,7 +110,7 @@ export function AccessRequests() {
           </div>
           <div>
             <p className="text-xl font-bold text-gray-800">{counts.pending_owner}</p>
-            <p className="text-xs text-gray-500">Aguardando Owner</p>
+            <p className="text-xs text-gray-500">{t('requests.waitingOwner')}</p>
           </div>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
@@ -118,7 +119,7 @@ export function AccessRequests() {
           </div>
           <div>
             <p className="text-xl font-bold text-gray-800">{counts.pending_data_team}</p>
-            <p className="text-xs text-gray-500">Aguardando Dados</p>
+            <p className="text-xs text-gray-500">{t('requests.waitingData')}</p>
           </div>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
@@ -127,7 +128,7 @@ export function AccessRequests() {
           </div>
           <div>
             <p className="text-xl font-bold text-gray-800">{counts.approved}</p>
-            <p className="text-xs text-gray-500">Aprovadas</p>
+            <p className="text-xs text-gray-500">{t('requests.approved')}</p>
           </div>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
@@ -136,7 +137,7 @@ export function AccessRequests() {
           </div>
           <div>
             <p className="text-xl font-bold text-gray-800">{counts.rejected}</p>
-            <p className="text-xs text-gray-500">Rejeitadas</p>
+            <p className="text-xs text-gray-500">{t('requests.rejected')}</p>
           </div>
         </div>
       </div>
@@ -172,14 +173,14 @@ export function AccessRequests() {
                     <span className="flex items-center gap-1"><User size={10} /> {req.requester}</span>
                     <span>{req.requesterEmail}</span>
                     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${req.permissionLevel === 'WRITE' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
-                      {PERMISSION_LABELS[req.permissionLevel]}
+                      {t(`permission.${req.permissionLevel}`)}
                     </span>
                   </div>
                 </div>
 
                 <span className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium ${REQUEST_STATUS_COLORS[req.status]}`}>
                   <SIcon size={12} />
-                  {REQUEST_STATUS_LABELS[req.status]}
+                  {t(`status.${req.status}`)}
                 </span>
 
                 <span className="text-xs text-gray-400">{new Date(req.createdAt).toLocaleDateString('pt-BR')}</span>
@@ -192,13 +193,13 @@ export function AccessRequests() {
                 <div className="border-t border-gray-100 px-5 py-5 space-y-4 bg-gray-50/50">
                   {/* Justification */}
                   <div>
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Justificativa</p>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{t('requests.justification')}</p>
                     <p className="text-sm text-gray-700 bg-white border border-gray-100 rounded-lg px-3 py-2">{req.justification}</p>
                   </div>
 
                   {/* Approval timeline */}
                   <div>
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Pipeline de Aprovação</p>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">{t('requests.approvalPipeline')}</p>
                     <div className="space-y-3">
                       {/* Step 1: Owner */}
                       <div className="flex items-start gap-3">
@@ -212,10 +213,10 @@ export function AccessRequests() {
                            req.ownerDecision === 'rejected' ? <XCircle size={14} /> : '1'}
                         </div>
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-700">Aprovação do Owner</p>
+                          <p className="text-sm font-medium text-gray-700">{t('requests.ownerApproval')}</p>
                           {req.ownerApprover && (
                             <div className="text-xs text-gray-500 mt-1">
-                              <span>{req.ownerDecision === 'approved' ? 'Aprovado' : 'Rejeitado'} por <strong>{req.ownerApprover}</strong> em {new Date(req.ownerDecisionAt!).toLocaleDateString('pt-BR')}</span>
+                              <span>{req.ownerDecision === 'approved' ? t('requests.approvedBy') : t('requests.rejectedBy')} <strong>{req.ownerApprover}</strong> {t('requests.onDate')} {new Date(req.ownerDecisionAt!).toLocaleDateString('pt-BR')}</span>
                               {req.ownerNotes && (
                                 <p className="flex items-start gap-1 mt-1 text-gray-400">
                                   <MessageSquare size={10} className="mt-0.5 shrink-0" /> {req.ownerNotes}
@@ -224,7 +225,7 @@ export function AccessRequests() {
                             </div>
                           )}
                           {req.status === 'pending_owner' && (
-                            <div className="text-xs text-yellow-600 mt-1">Aguardando decisão...</div>
+                            <div className="text-xs text-yellow-600 mt-1">{t('requests.waitingDecision')}</div>
                           )}
                         </div>
                       </div>
@@ -241,10 +242,10 @@ export function AccessRequests() {
                            req.dataTeamDecision === 'rejected' ? <XCircle size={14} /> : '2'}
                         </div>
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-700">Double-check — Time de Dados</p>
+                          <p className="text-sm font-medium text-gray-700">{t('requests.dataTeamCheck')}</p>
                           {req.dataTeamApprover && (
                             <div className="text-xs text-gray-500 mt-1">
-                              <span>{req.dataTeamDecision === 'approved' ? 'Aprovado' : 'Rejeitado'} por <strong>{req.dataTeamApprover}</strong> em {new Date(req.dataTeamDecisionAt!).toLocaleDateString('pt-BR')}</span>
+                              <span>{req.dataTeamDecision === 'approved' ? t('requests.approvedBy') : t('requests.rejectedBy')} <strong>{req.dataTeamApprover}</strong> {t('requests.onDate')} {new Date(req.dataTeamDecisionAt!).toLocaleDateString('pt-BR')}</span>
                               {req.dataTeamNotes && (
                                 <p className="flex items-start gap-1 mt-1 text-gray-400">
                                   <MessageSquare size={10} className="mt-0.5 shrink-0" /> {req.dataTeamNotes}
@@ -253,10 +254,10 @@ export function AccessRequests() {
                             </div>
                           )}
                           {req.status === 'pending_data_team' && (
-                            <div className="text-xs text-blue-600 mt-1">Aguardando double-check...</div>
+                            <div className="text-xs text-blue-600 mt-1">{t('requests.waitingDoubleCheck')}</div>
                           )}
                           {req.status === 'pending_owner' && (
-                            <div className="text-xs text-gray-400 mt-1">Etapa pendente</div>
+                            <div className="text-xs text-gray-400 mt-1">{t('requests.pendingStep')}</div>
                           )}
                         </div>
                       </div>
@@ -266,14 +267,14 @@ export function AccessRequests() {
                   {/* Action buttons */}
                   {req.status === 'pending_owner' && (
                     <ApprovalActions
-                      label="Owner"
+                      label={t('requests.ownerApproval')}
                       onApprove={() => handleOwnerApprove(req.id)}
                       onReject={(notes) => handleOwnerReject(req.id, notes)}
                     />
                   )}
                   {req.status === 'pending_data_team' && (
                     <ApprovalActions
-                      label="Time de Dados"
+                      label={t('requests.dataTeamCheck')}
                       onApprove={() => handleDataTeamApprove(req.id)}
                       onReject={(notes) => handleDataTeamReject(req.id, notes)}
                     />
@@ -287,7 +288,7 @@ export function AccessRequests() {
         {filtered.length === 0 && (
           <div className="bg-white rounded-xl border border-gray-200 p-12 text-center text-gray-400">
             <Shield size={32} className="mx-auto mb-2 opacity-30" />
-            <p className="text-sm">Nenhuma solicitação encontrada</p>
+            <p className="text-sm">{t('requests.noRequests')}</p>
           </div>
         )}
       </div>
@@ -302,21 +303,22 @@ function ApprovalActions({ label, onApprove, onReject }: {
   onApprove: () => void;
   onReject: (notes: string) => void;
 }) {
+  const { t } = useI18n();
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [rejectNotes, setRejectNotes] = useState('');
 
   return (
     <div className="border-t border-gray-200 pt-4">
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Ação — {label}</p>
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">{t('requests.action')} — {label}</p>
       {!showRejectForm ? (
         <div className="flex items-center gap-2">
           <button onClick={onApprove}
             className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors">
-            <CheckCircle size={14} /> Aprovar
+            <CheckCircle size={14} /> {t('requests.approve')}
           </button>
           <button onClick={() => setShowRejectForm(true)}
             className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors">
-            <XCircle size={14} /> Rejeitar
+            <XCircle size={14} /> {t('requests.reject')}
           </button>
         </div>
       ) : (
@@ -325,17 +327,17 @@ function ApprovalActions({ label, onApprove, onReject }: {
             value={rejectNotes}
             onChange={(e) => setRejectNotes(e.target.value)}
             rows={2}
-            placeholder="Motivo da rejeição..."
+            placeholder={t('requests.rejectReason')}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
           />
           <div className="flex items-center gap-2">
             <button onClick={() => { onReject(rejectNotes); setShowRejectForm(false); }}
               className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors">
-              <XCircle size={14} /> Confirmar Rejeição
+              <XCircle size={14} /> {t('requests.confirmReject')}
             </button>
             <button onClick={() => setShowRejectForm(false)}
               className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors">
-              Cancelar
+              {t('requests.cancel')}
             </button>
           </div>
         </div>

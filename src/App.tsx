@@ -11,29 +11,34 @@ import { SourceNew } from './pages/SourceNew';
 import { ProductList } from './pages/ProductList';
 import { ProductNew } from './pages/ProductNew';
 import { ProductDetail } from './pages/ProductDetail';
+import { Settings } from './pages/Settings';
 import { CartProvider } from './contexts/CartContext';
+import { I18nProvider } from './contexts/I18nContext';
 
 function App() {
   return (
-    <CartProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<Discovery />} />
-            <Route path="/discovery/cart" element={<Cart />} />
-            <Route path="/access-requests" element={<AccessRequests />} />
-            <Route path="/ingestion" element={<IngestionList />} />
-            <Route path="/ingestion/new" element={<IngestionNew />} />
-            <Route path="/ingestion/sources" element={<SourceList />} />
-            <Route path="/ingestion/sources/new" element={<SourceNew />} />
-            <Route path="/ingestion/:id" element={<IngestionDetail />} />
-            <Route path="/products" element={<ProductList />} />
-            <Route path="/products/new" element={<ProductNew />} />
-            <Route path="/products/:id" element={<ProductDetail />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </CartProvider>
+    <I18nProvider>
+      <CartProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route element={<Layout />}>
+              <Route path="/" element={<Discovery />} />
+              <Route path="/discovery/cart" element={<Cart />} />
+              <Route path="/access-requests" element={<AccessRequests />} />
+              <Route path="/ingestion" element={<IngestionList />} />
+              <Route path="/ingestion/new" element={<IngestionNew />} />
+              <Route path="/ingestion/sources" element={<SourceList />} />
+              <Route path="/ingestion/sources/new" element={<SourceNew />} />
+              <Route path="/ingestion/:id" element={<IngestionDetail />} />
+              <Route path="/products" element={<ProductList />} />
+              <Route path="/products/new" element={<ProductNew />} />
+              <Route path="/products/:id" element={<ProductDetail />} />
+              <Route path="/settings" element={<Settings />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </CartProvider>
+    </I18nProvider>
   );
 }
 

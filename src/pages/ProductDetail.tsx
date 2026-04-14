@@ -3,12 +3,14 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   ChevronLeft, Download, Tag, Pencil, Shield,
   Plus, Trash2, Check, Key, Users, User, Bot, Package,
+  GitBranch, Table2, Link2, Database, ArrowRight, ExternalLink,
 } from 'lucide-react';
 import { mockProducts, mockPermissions } from '../data/mockProducts';
 import {
-  PRODUCT_STATUS_LABELS, ProductStatus, ObjectPermission,
-  PermissionLevel, PrincipalType, PERMISSION_LABELS, getTypeColor,
+  ProductStatus, ObjectPermission,
+  PermissionLevel, PrincipalType, PERMISSION_LABELS, OBJECT_TYPE_LABELS, getTypeColor,
 } from '../types/product';
+import { useI18n } from '../contexts/I18nContext';
 
 const STATUS_COLORS: Record<ProductStatus, string> = {
   active:     'bg-green-100 text-green-700',
@@ -31,20 +33,21 @@ const PRINCIPAL_LABELS: Record<PrincipalType, string> = {
 export function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useI18n();
   const product = mockProducts.find((p) => p.id === id);
 
   const [permissions, setPermissions] = useState<ObjectPermission[]>(
     mockPermissions.filter((p) => p.productId === id),
   );
   const [showGrantModal, setShowGrantModal] = useState(false);
-  const [tab, setTab] = useState<'info' | 'columns' | 'permissions'>('info');
+  const [tab, setTab] = useState<'info' | 'columns' | 'permissions' | 'lineage' | 'sampleData' | 'joins'>('info');
 
   if (!product) {
     return (
       <div className="p-8 text-center text-gray-400">
-        <p>Produto não encontrado.</p>
+        <p>{t('productDetail.notFound')}</p>
         <button onClick={() => navigate('/products')} className="mt-4 text-blue-600 text-sm hover:underline">
-          Voltar para lista
+          {t('productDetail.backToList')}
         </button>
       </div>
     );
@@ -73,7 +76,7 @@ export function ProductDetail() {
   return (
     <div className="p-8 max-w-5xl mx-auto">
       <button onClick={() => navigate('/products')} className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-6">
-        <ChevronLeft size={16} /> Voltar para produtos
+        <ChevronLeft size={16} /> {t('productDetail.backToProducts')}
       </button>
 
       {/* Header */}
@@ -82,7 +85,7 @@ export function ProductDetail() {
           <div className="flex items-center gap-3 mb-1 flex-wrap">
             <h1 className="text-2xl font-bold text-gray-900">{product.name}</h1>
             <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[product.status]}`}>
-              {PRODUCT_STATUS_LABELS[product.status]}
+              {t(`productStatus.${product.status}`)}
             </span>
             {product.importedFromDatabricks && (
               <span className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
@@ -93,14 +96,14 @@ export function ProductDetail() {
           <p className="text-sm text-gray-500">{product.description}</p>
         </div>
         <button className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors shrink-0">
-          <Pencil size={14} /> Editar
+          <Pencil size={14} /> {t('productDetail.edit')}
         </button>
       </div>
 
       {/* Summary cards */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Objeto</p>
+          <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">{t('productDetail.object')}</p>
           <p className="text-sm font-mono">
             <span className="text-blue-600">{product.catalog}</span>
             <span className="text-gray-400">.</span>
@@ -115,11 +118,11 @@ export function ProductDetail() {
           <p className="text-xs text-gray-400">{product.team}</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Colunas</p>
+          <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">{t('productDetail.columns')}</p>
           <p className="text-xl font-bold text-gray-800">{product.columns.length}</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Permissões</p>
+          <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">{t('productDetail.permissions')}</p>
           <p className="text-xl font-bold text-gray-800">{permissions.length}</p>
         </div>
       </div>
@@ -140,6 +143,9 @@ export function ProductDetail() {
         {([
           { key: 'info', label: 'Informações' },
           { key: 'columns', label: `Colunas (${product.columns.length})` },
+          { key: 'lineage', label: 'Linhagem' },
+          { key: 'sampleData', label: 'Sample Data' },
+          { key: 'joins', label: 'Joins & Sinergia' },
           { key: 'permissions', label: `Permissões (${permissions.length})` },
         ] as const).map(({ key, label }) => (
           <button key={key} onClick={() => setTab(key)}
@@ -296,6 +302,201 @@ export function ProductDetail() {
                   })}
                 </tbody>
               </table>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Tab: Lineage */}
+      {tab === 'lineage' && (
+        <div className="bg-white border border-gray-200 rounded-xl p-6">
+          {product.lineage ? (
+            <div className="space-y-6">
+              <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">Pipeline de dados — Unity Catalog (Databricks)</p>
+
+              {/* Visual flow */}
+              <div className="flex items-stretch gap-0 overflow-x-auto pb-2">
+                {/* Upstream */}
+                {product.lineage.upstream.map((node, i) => (
+                  <div key={`up-${i}`} className="flex items-center">
+                    <div className={`min-w-[180px] rounded-xl border-2 p-4 text-center ${
+                      node.type === 'source' ? 'border-orange-200 bg-orange-50' :
+                      node.type === 'bronze' ? 'border-amber-200 bg-amber-50' :
+                      'border-blue-200 bg-blue-50'
+                    }`}>
+                      <div className="flex items-center justify-center gap-1.5 mb-1">
+                        <Database size={12} className={
+                          node.type === 'source' ? 'text-orange-500' :
+                          node.type === 'bronze' ? 'text-amber-500' :
+                          'text-blue-500'
+                        } />
+                        <span className={`text-[10px] font-bold uppercase ${
+                          node.type === 'source' ? 'text-orange-500' :
+                          node.type === 'bronze' ? 'text-amber-500' :
+                          'text-blue-500'
+                        }`}>{node.type}</span>
+                      </div>
+                      <p className="text-xs font-mono text-gray-700 break-all">{node.name}</p>
+                    </div>
+                    <ArrowRight size={16} className="text-gray-300 mx-1 shrink-0" />
+                  </div>
+                ))}
+
+                {/* Current (Gold) */}
+                <div className="flex items-center">
+                  <div className="min-w-[180px] rounded-xl border-2 border-yellow-400 bg-yellow-50 p-4 text-center ring-2 ring-yellow-200">
+                    <div className="flex items-center justify-center gap-1.5 mb-1">
+                      <Table2 size={12} className="text-yellow-600" />
+                      <span className="text-[10px] font-bold uppercase text-yellow-600">GOLD</span>
+                    </div>
+                    <p className="text-xs font-mono font-semibold text-gray-800">{product.catalog}.{product.schema}.{product.object}</p>
+                    <p className="text-[10px] text-gray-500 mt-1">{product.name}</p>
+                  </div>
+                </div>
+
+                {/* Downstream */}
+                {product.lineage.downstream.map((node, i) => (
+                  <div key={`down-${i}`} className="flex items-center">
+                    <ArrowRight size={16} className="text-gray-300 mx-1 shrink-0" />
+                    <div className="min-w-[180px] rounded-xl border-2 border-green-200 bg-green-50 p-4 text-center">
+                      <div className="flex items-center justify-center gap-1.5 mb-1">
+                        <ExternalLink size={12} className="text-green-500" />
+                        <span className="text-[10px] font-bold uppercase text-green-500">{node.type}</span>
+                      </div>
+                      <p className="text-xs text-gray-700">{node.name}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t border-gray-100 pt-4">
+                <p className="text-xs text-gray-400">
+                  <GitBranch size={12} className="inline mr-1" />
+                  Linhagem extraída automaticamente do Unity Catalog. Para detalhes completos, consulte o Databricks diretamente.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-12 text-gray-400">
+              <GitBranch size={28} className="mx-auto mb-2 opacity-30" />
+              <p className="text-sm">Linhagem não disponível para este produto</p>
+              <p className="text-xs text-gray-300 mt-1">Conecte ao Databricks Unity Catalog para visualizar</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tab: Sample Data */}
+      {tab === 'sampleData' && (
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          {product.sampleData && product.sampleData.length > 0 ? (
+            <>
+              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                <p className="text-xs text-gray-500">
+                  Amostra de {product.sampleData.length} registros — dados anonimizados para preview
+                </p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="bg-gray-50 text-left">
+                      {Object.keys(product.sampleData[0]).map((col) => (
+                        <th key={col} className="px-3 py-2.5 font-semibold text-gray-500 uppercase whitespace-nowrap font-mono">{col}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {product.sampleData.map((row, i) => (
+                      <tr key={i} className="hover:bg-gray-50">
+                        {Object.values(row).map((val, j) => (
+                          <td key={j} className="px-3 py-2 whitespace-nowrap text-gray-700 font-mono">
+                            {val === null ? <span className="text-gray-300 italic">NULL</span> :
+                             typeof val === 'boolean' ? <span className={val ? 'text-green-600' : 'text-red-400'}>{String(val)}</span> :
+                             typeof val === 'number' ? <span className="text-blue-600">{val.toLocaleString('pt-BR')}</span> :
+                             String(val)}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-12 text-gray-400">
+              <Table2 size={28} className="mx-auto mb-2 opacity-30" />
+              <p className="text-sm">Sample data não disponível</p>
+              <p className="text-xs text-gray-300 mt-1">Dados de amostra serão exibidos quando disponíveis no catálogo</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tab: Joins & Synergy */}
+      {tab === 'joins' && (
+        <div className="space-y-4">
+          {/* Usage recommendations */}
+          {product.usageRecommendations && product.usageRecommendations.length > 0 && (
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <h3 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                <span className="text-base">💡</span> Recomendações de Uso
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {product.usageRecommendations.map((rec) => (
+                  <div key={rec.tool} className="flex items-start gap-3 bg-gray-50 rounded-lg p-3">
+                    <span className="text-xl">{rec.emoji}</span>
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">{rec.tool}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{rec.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Related products / joins */}
+          <div className="bg-white border border-gray-200 rounded-xl p-5">
+            <h3 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+              <Link2 size={14} /> Joins & Sinergia com outros Produtos
+            </h3>
+            {product.relatedProducts && product.relatedProducts.length > 0 ? (
+              <div className="space-y-3">
+                {product.relatedProducts.map((rel) => (
+                  <div key={rel.productId} className="flex items-start gap-4 p-4 border border-gray-100 rounded-lg hover:border-blue-200 hover:bg-blue-50/30 transition-all">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                      rel.type === 'join' ? 'bg-blue-100' : 'bg-purple-100'
+                    }`}>
+                      {rel.type === 'join' ? <Link2 size={14} className="text-blue-600" /> : <GitBranch size={14} className="text-purple-600" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <button onClick={() => navigate(`/products/${rel.productId}`)} className="text-sm font-semibold text-blue-600 hover:underline">
+                          {rel.productName}
+                        </button>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium uppercase ${
+                          rel.type === 'join' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'
+                        }`}>{rel.type}</span>
+                      </div>
+                      <p className="text-xs text-gray-500">{rel.relationship}</p>
+                      {rel.joinKeys.length > 0 && (
+                        <div className="flex items-center gap-1 mt-2">
+                          <Key size={10} className="text-gray-400" />
+                          <span className="text-xs font-mono text-gray-500">
+                            {rel.joinKeys.join(', ')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-400">
+                <Link2 size={24} className="mx-auto mb-2 opacity-30" />
+                <p className="text-sm">Nenhuma relação mapeada ainda</p>
+                <p className="text-xs text-gray-300 mt-1">Adicione joins e sinergias com outros produtos de dados</p>
+              </div>
             )}
           </div>
         </div>

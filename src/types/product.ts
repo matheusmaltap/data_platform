@@ -2,6 +2,7 @@ export type ObjectType = 'table' | 'view';
 export type ProductStatus = 'active' | 'deprecated' | 'draft';
 export type PermissionLevel = 'READ' | 'WRITE' | 'OWNER';
 export type PrincipalType = 'user' | 'group' | 'service_principal';
+export type DataCategory = 'fato' | 'dimensao' | 'agregada' | 'snapshot';
 
 export interface ColumnMetadata {
   name: string;
@@ -10,6 +11,25 @@ export interface ColumnMetadata {
   isPrimaryKey: boolean;
   isNullable: boolean;
   tags: string[];
+}
+
+export interface UsageRecommendation {
+  tool: string;
+  emoji: string;
+  description: string;
+}
+
+export interface RelatedProduct {
+  productId: string;
+  productName: string;
+  joinKeys: string[];
+  relationship: string;
+  type: 'join' | 'synergy';
+}
+
+export interface LineageNode {
+  name: string;
+  type: 'source' | 'bronze' | 'silver' | 'gold' | 'consumption';
 }
 
 export interface DataProduct {
@@ -30,6 +50,11 @@ export interface DataProduct {
   columns: ColumnMetadata[];
   rowCount?: number;
   sizeGb?: number;
+  dataCategory?: DataCategory;
+  usageRecommendations?: UsageRecommendation[];
+  relatedProducts?: RelatedProduct[];
+  sampleData?: Record<string, string | number | boolean | null>[];
+  lineage?: { upstream: LineageNode[]; downstream: LineageNode[] };
 }
 
 export interface ObjectPermission {

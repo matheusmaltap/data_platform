@@ -1,0 +1,198 @@
+import { DataProduct, ObjectPermission, ColumnMetadata } from '../types/product';
+
+// ── Mock column sets ───────────────────────────────────────────────────────────
+
+const colsVendasConsolidadas: ColumnMetadata[] = [
+  { name: 'dt_referencia',      dataType: 'DATE',         description: 'Data de referência da venda',             isPrimaryKey: false, isNullable: false, tags: ['partição'] },
+  { name: 'id_pedido',          dataType: 'BIGINT',        description: 'Identificador único do pedido',            isPrimaryKey: true,  isNullable: false, tags: [] },
+  { name: 'id_cliente',         dataType: 'BIGINT',        description: 'Identificador do cliente',                 isPrimaryKey: false, isNullable: false, tags: [] },
+  { name: 'nm_cliente',         dataType: 'STRING',        description: 'Nome completo do cliente',                 isPrimaryKey: false, isNullable: true,  tags: ['PII'] },
+  { name: 'cd_produto',         dataType: 'STRING',        description: 'Código do produto vendido',                isPrimaryKey: false, isNullable: false, tags: [] },
+  { name: 'nm_produto',         dataType: 'STRING',        description: 'Descrição do produto',                    isPrimaryKey: false, isNullable: true,  tags: [] },
+  { name: 'qt_itens',           dataType: 'INTEGER',       description: 'Quantidade de itens no pedido',            isPrimaryKey: false, isNullable: false, tags: [] },
+  { name: 'vl_unitario',        dataType: 'DECIMAL(18,2)', description: 'Valor unitário do produto',                isPrimaryKey: false, isNullable: false, tags: [] },
+  { name: 'vl_desconto',        dataType: 'DECIMAL(18,2)', description: 'Valor total de desconto aplicado',         isPrimaryKey: false, isNullable: true,  tags: [] },
+  { name: 'vl_total',           dataType: 'DECIMAL(18,2)', description: 'Valor total do pedido',                   isPrimaryKey: false, isNullable: false, tags: [] },
+  { name: 'nm_vendedor',        dataType: 'STRING',        description: 'Nome do vendedor responsável',             isPrimaryKey: false, isNullable: true,  tags: [] },
+  { name: 'cd_regiao',          dataType: 'STRING',        description: 'Código da região de venda',                isPrimaryKey: false, isNullable: true,  tags: [] },
+  { name: 'ds_canal',           dataType: 'STRING',        description: 'Canal de venda (loja, e-commerce, etc)',   isPrimaryKey: false, isNullable: true,  tags: [] },
+  { name: 'dt_ingestion',       dataType: 'TIMESTAMP',     description: 'Carimbo de ingestão na plataforma',        isPrimaryKey: false, isNullable: false, tags: ['sistema'] },
+];
+
+const colsClientesDimensao: ColumnMetadata[] = [
+  { name: 'id_cliente',         dataType: 'BIGINT',        description: 'Identificador único do cliente (PK)',      isPrimaryKey: true,  isNullable: false, tags: [] },
+  { name: 'nm_cliente',         dataType: 'STRING',        description: 'Nome completo',                           isPrimaryKey: false, isNullable: false, tags: ['PII'] },
+  { name: 'nr_cpf_cnpj',        dataType: 'STRING',        description: 'CPF ou CNPJ do cliente',                  isPrimaryKey: false, isNullable: true,  tags: ['PII', 'sensitivo'] },
+  { name: 'ds_email',           dataType: 'STRING',        description: 'E-mail principal',                        isPrimaryKey: false, isNullable: true,  tags: ['PII'] },
+  { name: 'nr_telefone',        dataType: 'STRING',        description: 'Telefone de contato',                     isPrimaryKey: false, isNullable: true,  tags: ['PII'] },
+  { name: 'tp_cliente',         dataType: 'STRING',        description: 'Tipo: PF ou PJ',                          isPrimaryKey: false, isNullable: false, tags: [] },
+  { name: 'ds_segmento',        dataType: 'STRING',        description: 'Segmento de mercado do cliente',          isPrimaryKey: false, isNullable: true,  tags: [] },
+  { name: 'dt_primeiro_pedido', dataType: 'DATE',          description: 'Data do primeiro pedido realizado',       isPrimaryKey: false, isNullable: true,  tags: [] },
+  { name: 'vl_ltv',             dataType: 'DECIMAL(18,2)', description: 'Lifetime value acumulado',                isPrimaryKey: false, isNullable: true,  tags: [] },
+  { name: 'fl_ativo',           dataType: 'BOOLEAN',       description: 'Indica se o cliente está ativo',          isPrimaryKey: false, isNullable: false, tags: [] },
+  { name: 'dt_ingestion',       dataType: 'TIMESTAMP',     description: 'Carimbo de ingestão na plataforma',       isPrimaryKey: false, isNullable: false, tags: ['sistema'] },
+];
+
+const colsDreConsolidado: ColumnMetadata[] = [
+  { name: 'dt_referencia',      dataType: 'DATE',          description: 'Mês de referência (primeiro dia do mês)', isPrimaryKey: true,  isNullable: false, tags: ['partição'] },
+  { name: 'cd_empresa',         dataType: 'STRING',        description: 'Código da empresa/filial',                isPrimaryKey: true,  isNullable: false, tags: [] },
+  { name: 'cd_conta_contabil',  dataType: 'STRING',        description: 'Código da conta contábil',                isPrimaryKey: true,  isNullable: false, tags: [] },
+  { name: 'ds_conta',           dataType: 'STRING',        description: 'Descrição da conta contábil',             isPrimaryKey: false, isNullable: false, tags: [] },
+  { name: 'ds_grupo',           dataType: 'STRING',        description: 'Grupo de contas (Receita, Despesa, etc)', isPrimaryKey: false, isNullable: false, tags: [] },
+  { name: 'vl_realizado',       dataType: 'DECIMAL(18,2)', description: 'Valor realizado no período',              isPrimaryKey: false, isNullable: true,  tags: [] },
+  { name: 'vl_orcado',          dataType: 'DECIMAL(18,2)', description: 'Valor orçado para o período',             isPrimaryKey: false, isNullable: true,  tags: [] },
+  { name: 'vl_variacao',        dataType: 'DECIMAL(18,2)', description: 'Variação realizado x orçado',             isPrimaryKey: false, isNullable: true,  tags: [] },
+  { name: 'pc_variacao',        dataType: 'DECIMAL(5,2)',  description: 'Percentual de variação',                  isPrimaryKey: false, isNullable: true,  tags: [] },
+  { name: 'dt_ingestion',       dataType: 'TIMESTAMP',     description: 'Carimbo de ingestão na plataforma',       isPrimaryKey: false, isNullable: false, tags: ['sistema'] },
+];
+
+// ── Mock products ──────────────────────────────────────────────────────────────
+
+export const mockProducts: DataProduct[] = [
+  {
+    id: 'prod-1',
+    name: 'Vendas Consolidadas',
+    description: 'Tabela Gold com todas as vendas consolidadas por pedido, enriquecidas com dados de cliente e produto. Principal fonte para relatórios comerciais.',
+    objectType: 'table',
+    catalog: 'comercial',
+    schema: 'gold',
+    object: 'vendas_consolidadas',
+    owner: 'Ana Lima',
+    team: 'Comercial',
+    tags: ['vendas', 'gold', 'certificado'],
+    status: 'active',
+    createdAt: '2026-01-10',
+    updatedAt: '2026-04-10',
+    importedFromDatabricks: true,
+    rowCount: 4820340,
+    sizeGb: 12.4,
+    columns: colsVendasConsolidadas,
+  },
+  {
+    id: 'prod-2',
+    name: 'Dimensão Clientes',
+    description: 'Dimensão consolidada de clientes com dados cadastrais, segmentação e métricas de relacionamento. Fonte para análises de CRM e marketing.',
+    objectType: 'table',
+    catalog: 'comercial',
+    schema: 'gold',
+    object: 'dim_clientes',
+    owner: 'Carlos Souza',
+    team: 'Marketing',
+    tags: ['clientes', 'dimensão', 'PII'],
+    status: 'active',
+    createdAt: '2026-01-15',
+    updatedAt: '2026-04-12',
+    importedFromDatabricks: true,
+    rowCount: 183200,
+    sizeGb: 1.2,
+    columns: colsClientesDimensao,
+  },
+  {
+    id: 'prod-3',
+    name: 'DRE Consolidado',
+    description: 'Demonstrativo de Resultado do Exercício consolidado por empresa e conta contábil, com comparativo orçado x realizado.',
+    objectType: 'table',
+    catalog: 'financeiro',
+    schema: 'gold',
+    object: 'dre_consolidado',
+    owner: 'Beatriz Rocha',
+    team: 'Financeiro',
+    tags: ['dre', 'financeiro', 'gold', 'certificado'],
+    status: 'active',
+    createdAt: '2026-02-01',
+    updatedAt: '2026-04-13',
+    importedFromDatabricks: false,
+    rowCount: 45600,
+    sizeGb: 0.3,
+    columns: colsDreConsolidado,
+  },
+  {
+    id: 'prod-4',
+    name: 'View Performance Campanhas',
+    description: 'View que consolida métricas de desempenho de campanhas de marketing com dados de leads, conversão e CAC.',
+    objectType: 'view',
+    catalog: 'marketing',
+    schema: 'gold',
+    object: 'vw_performance_campanhas',
+    owner: 'Fernanda Costa',
+    team: 'Marketing',
+    tags: ['marketing', 'campanhas', 'view'],
+    status: 'draft',
+    createdAt: '2026-04-05',
+    updatedAt: '2026-04-05',
+    importedFromDatabricks: false,
+    columns: [],
+  },
+];
+
+// ── Mock permissions ───────────────────────────────────────────────────────────
+
+export const mockPermissions: ObjectPermission[] = [
+  // prod-1 permissions
+  { id: 'perm-1', productId: 'prod-1', principal: 'grp-comercial',     principalType: 'group',             permission: 'READ',  grantedBy: 'Ana Lima',    grantedAt: '2026-01-10' },
+  { id: 'perm-2', productId: 'prod-1', principal: 'grp-analytics',     principalType: 'group',             permission: 'READ',  grantedBy: 'Ana Lima',    grantedAt: '2026-01-10' },
+  { id: 'perm-3', productId: 'prod-1', principal: 'ana.lima',          principalType: 'user',              permission: 'OWNER', grantedBy: 'sistema',     grantedAt: '2026-01-10' },
+  { id: 'perm-4', productId: 'prod-1', principal: 'svc-powerbi',       principalType: 'service_principal', permission: 'READ',  grantedBy: 'Ana Lima',    grantedAt: '2026-02-01' },
+  { id: 'perm-5', productId: 'prod-1', principal: 'diego.ferreira',    principalType: 'user',              permission: 'READ',  grantedBy: 'Ana Lima',    grantedAt: '2026-03-15' },
+
+  // prod-2 permissions
+  { id: 'perm-6', productId: 'prod-2', principal: 'grp-marketing',     principalType: 'group',             permission: 'READ',  grantedBy: 'Carlos Souza', grantedAt: '2026-01-15' },
+  { id: 'perm-7', productId: 'prod-2', principal: 'carlos.souza',      principalType: 'user',              permission: 'OWNER', grantedBy: 'sistema',      grantedAt: '2026-01-15' },
+  { id: 'perm-8', productId: 'prod-2', principal: 'svc-powerbi',       principalType: 'service_principal', permission: 'READ',  grantedBy: 'Carlos Souza', grantedAt: '2026-02-01' },
+
+  // prod-3 permissions
+  { id: 'perm-9',  productId: 'prod-3', principal: 'grp-financeiro',   principalType: 'group',             permission: 'READ',  grantedBy: 'Beatriz Rocha', grantedAt: '2026-02-01' },
+  { id: 'perm-10', productId: 'prod-3', principal: 'beatriz.rocha',    principalType: 'user',              permission: 'OWNER', grantedBy: 'sistema',       grantedAt: '2026-02-01' },
+  { id: 'perm-11', productId: 'prod-3', principal: 'diretoria',        principalType: 'group',             permission: 'READ',  grantedBy: 'Beatriz Rocha', grantedAt: '2026-02-15' },
+  { id: 'perm-12', productId: 'prod-3', principal: 'svc-tableau',      principalType: 'service_principal', permission: 'READ',  grantedBy: 'Beatriz Rocha', grantedAt: '2026-03-01' },
+];
+
+// ── Mock Databricks objects for import ─────────────────────────────────────────
+// Simula o que seria retornado de uma chamada à API do Unity Catalog
+
+export const MOCK_DATABRICKS_OBJECTS: Record<string, Record<string, { name: string; type: 'table' | 'view' }[]>> = {
+  comercial: {
+    gold: [
+      { name: 'vendas_consolidadas', type: 'table' },
+      { name: 'dim_clientes',        type: 'table' },
+      { name: 'dim_produtos',        type: 'table' },
+      { name: 'fato_pedidos',        type: 'table' },
+      { name: 'vw_ranking_vendedores', type: 'view' },
+    ],
+  },
+  financeiro: {
+    gold: [
+      { name: 'dre_consolidado',       type: 'table' },
+      { name: 'fluxo_caixa',           type: 'table' },
+      { name: 'budget_vs_realizado',   type: 'table' },
+      { name: 'vw_indicadores_kpi',    type: 'view' },
+    ],
+  },
+  marketing: {
+    gold: [
+      { name: 'vw_performance_campanhas', type: 'view' },
+      { name: 'funil_leads',              type: 'table' },
+      { name: 'nps_historico',            type: 'table' },
+    ],
+  },
+  dados: {
+    gold: [
+      { name: 'catalogo_produtos',  type: 'table' },
+      { name: 'dim_tempo',          type: 'table' },
+    ],
+  },
+};
+
+// Simula colunas importadas do Databricks por objeto
+export const MOCK_DATABRICKS_COLUMNS: Record<string, ColumnMetadata[]> = {
+  'comercial.gold.vendas_consolidadas': colsVendasConsolidadas,
+  'comercial.gold.dim_clientes':        colsClientesDimensao,
+  'financeiro.gold.dre_consolidado':    colsDreConsolidado,
+  'comercial.gold.dim_produtos': [
+    { name: 'cd_produto',  dataType: 'STRING',        description: 'Código do produto',         isPrimaryKey: true,  isNullable: false, tags: [] },
+    { name: 'nm_produto',  dataType: 'STRING',        description: 'Nome do produto',           isPrimaryKey: false, isNullable: false, tags: [] },
+    { name: 'ds_categoria',dataType: 'STRING',        description: 'Categoria do produto',      isPrimaryKey: false, isNullable: true,  tags: [] },
+    { name: 'vl_preco',    dataType: 'DECIMAL(18,2)', description: 'Preço de tabela',           isPrimaryKey: false, isNullable: false, tags: [] },
+    { name: 'fl_ativo',    dataType: 'BOOLEAN',       description: 'Produto ativo',             isPrimaryKey: false, isNullable: false, tags: [] },
+  ],
+};

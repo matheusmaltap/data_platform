@@ -1,8 +1,9 @@
 import { NavLink } from 'react-router-dom';
-import { Database, LayoutDashboard, Settings, GitMerge, Activity, Package } from 'lucide-react';
+import { Database, Search, ClipboardCheck, Settings, GitMerge, Activity, Package } from 'lucide-react';
 
 const navItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/', icon: Search, label: 'Discovery' },
+  { to: '/access-requests', icon: ClipboardCheck, label: 'Solicitações' },
   { to: '/ingestion', icon: Database, label: 'Ingestão' },
   { to: '/products', icon: Package, label: 'Produtos' },
   { to: '/pipelines', icon: GitMerge, label: 'Pipelines', disabled: true },
